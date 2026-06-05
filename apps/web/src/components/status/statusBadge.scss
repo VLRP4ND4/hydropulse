@@ -1,0 +1,30 @@
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.normal {
+    color: #0f766e;
+    background: #ccfbf1;
+  }
+
+  &.danger {
+    color: #b45309;
+    background: #fef3c7;
+  }
+
+  &.critical {
+    color: #b91c1c;
+    background: #fee2e2;
+  }
+
+  &.no_data {
+    color: #475569;
+    background: #e2e8f0;
+  }
+}

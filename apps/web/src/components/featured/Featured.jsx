@@ -1,94 +1,94 @@
 import "./featured.scss";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpOutlinedIcon from "@mui/icons-material/KeyboardArrowUpOutlined";
-import {useObject} from "react-firebase-hooks/database";
-import {ref} from "firebase/database";
-import {db} from "../../firebase";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import StatusBadge from "../status/StatusBadge";
 
+// Центральная карточка показывает выбранный гидропост как процент от критического уровня.
+function number_or_null(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
+function format_cm(value) {
+  const parsed = number_or_null(value);
+  return parsed === null ? "—" : `${parsed.toFixed(1)} см`;
+}
 
-const Featured = () => {
-  const [levelwater001] = useObject(ref(db, 'id/001/levelwater')); //в данном случае посредством функцией val() мы можем получить значение из указанной ссылки при этом компонент будет обновляться при изменении значения в БД
-  const [levelcrit001] = useObject(ref(db, 'id/001/levelcrit'));
-  const [lat001] = useObject(ref(db, 'id/001/lat'));
-  const [lon001] = useObject(ref(db, 'id/001/lng'));
-  const [title001] = useObject(ref(db, 'id/001/title'));
+// Процент ограничен сверху 150%, чтобы критическое превышение было видно,
+// но круговая диаграмма не ломалась от больших значений.
+function percent_level(station) {
+  const level = number_or_null(station && station.water_level_cm);
+  const critical = number_or_null(station && station.critical_level_cm);
 
+  if (level === null || critical === null || critical <= 0) return 0;
+  return Math.max(0, Math.min(150, Math.round((level * 100) / critical)));
+}
 
-  const [levelwater002] = useObject(ref(db, 'id/002/levelwater'));
-  const [levelcrit002] = useObject(ref(db, 'id/002/levelcrit'));
-  const [lat002] = useObject(ref(db, 'id/002/lat'));
-  const [lon002] = useObject(ref(db, 'id/002/lng'));
-  const [title002] = useObject(ref(db, 'id/002/title'));
-
-  const [levelwater003] = useObject(ref(db, 'id/003/levelwater'));
-  const [levelcrit003] = useObject(ref(db, 'id/003/levelcrit'));
-  const [lat003] = useObject(ref(db, 'id/003/lat'));
-  const [lon003] = useObject(ref(db, 'id/003/lng'));
-  const [title003] = useObject(ref(db, 'id/003/title'));
-
-  const [levelwater004] = useObject(ref(db, 'id/004/levelwater'));
-  const [levelcrit004] = useObject(ref(db, 'id/004/levelcrit'));
-  const [lat004] = useObject(ref(db, 'id/004/lat'));
-  const [lon004] = useObject(ref(db, 'id/004/lng'));
-  const [title004] = useObject(ref(db, 'id/004/title'));
-
-  function percentLevel(level, critical){
-    const percent = (level*100)/critical;
-    return percent
-  }
-  function checkStatus(level, critical){
-    var status;
-    if(level<critical){
-      status = "Нормальный";
-    } else {
-      status = "Критический";
-    }
-    return status
-  }
+const Featured = ({ station, forecast }) => {
+  // speed и eta приходят из прогнозной модели backend-а.
+  const percent = percent_level(station);
+  const speed = forecast && forecast.rise_rate_cm_per_hour;
+  const eta = forecast && forecast.hours_to_critical;
 
   return (
     <div className="featured">
       <div className="top">
-        <h1 className="title">Статус паводковой ситуации</h1>
-        <MoreVertIcon fontSize="small" />
+        <h1 className="title">Паводковая ситуация</h1>
+        <StatusBadge status={station && station.water_level_status} />
       </div>
-      <div className="bottom">
-        <div className="featuredChart">
-          <CircularProgressbar value={percentLevel(parseFloat(levelwater001 && levelwater001.val()), parseFloat(levelcrit001 && levelcrit001.val()))} text={percentLevel(parseFloat(levelwater001 && levelwater001.val()), parseFloat(levelcrit001 && levelcrit001.val())) + "%"} strokeWidth={10} />
+
+      {!station ? (
+        <div className="emptyState">Нет данных по гидропостам</div>
+      ) : (
+        <div className="bottom">
+          <div className="featuredChart">
+            <CircularProgressbar
+              value={Math.min(percent, 100)}
+              text={`${percent}%`}
+              strokeWidth={10}
+            />
+          </div>
+
+          <p className="title">{station.monitoring_station_name}</p>
+          <p className="amount">{format_cm(station.water_level_cm)}</p>
+          <p className="desc">
+            Река: {station.water_body_name}. Опасный уровень: {format_cm(station.danger_level_cm)}, критический: {format_cm(station.critical_level_cm)}.
+          </p>
+
+          <div className="summary">
+            <div className="item">
+              <div className="itemTitle">Подъём</div>
+              <div className={`itemResult ${Number(speed) > 0 ? "positive" : "neutral"}`}>
+                <KeyboardArrowUpOutlinedIcon fontSize="small" />
+                <div className="resultAmount">
+                  {Number.isFinite(Number(speed)) ? `${Number(speed).toFixed(1)} см/ч` : "—"}
+                </div>
+              </div>
+            </div>
+
+            <div className="item">
+              <div className="itemTitle">До критич.</div>
+              <div className="itemResult neutral">
+                <WarningAmberIcon fontSize="small" />
+                <div className="resultAmount">
+                  {Number.isFinite(Number(eta)) ? `${Number(eta).toFixed(1)} ч` : "—"}
+                </div>
+              </div>
+            </div>
+
+            <div className="item">
+              <div className="itemTitle">Последний замер</div>
+              <div className="itemResult neutral">
+                <div className="resultAmount">
+                  {station.measured_at ? new Date(station.measured_at).toLocaleString() : "—"}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <p className="title">Локация: {title001&&title001.val()}</p>
-        <p className="amount">{levelwater001&&levelwater001.val() + " см"}</p>
-        <p className="desc">
-          Местоположение выбрано по умолчанию
-        </p>
-        <div className="summary">
-          <div className="item">
-            <div className="itemTitle">Прогноз</div>
-            <div className="itemResult negative">
-              <KeyboardArrowDownIcon fontSize="small"/>
-              <div className="resultAmount">7 дней</div>
-            </div>
-          </div>
-          <div className="item">
-            <div className="itemTitle">Подъем</div>
-            <div className="itemResult positive">
-              <KeyboardArrowUpOutlinedIcon fontSize="small"/>
-              <div className="resultAmount">55 см</div>
-            </div>
-          </div>
-          <div className="item">
-            <div className="itemTitle">Ожидается</div>
-            <div className="itemResult positive">
-              <KeyboardArrowUpOutlinedIcon fontSize="small"/>
-              <div className="resultAmount">18 см</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

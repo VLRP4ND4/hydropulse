@@ -1,31 +1,103 @@
 .home {
   display: flex;
+  min-height: 100vh;
+  background: #f1f5f9;
 
   .homeContainer {
     flex: 6;
+    min-width: 0;
+  }
+
+  .pageIntro {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 24px 8px;
+
+    h1 {
+      margin: 0;
+      color: #0f172a;
+      font-size: 28px;
+    }
+
+    p {
+      margin: 6px 0 0;
+      color: #64748b;
+    }
+
+  }
+
+  .apiError {
+    margin: 10px 24px 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 14px;
+  }
+
+  .widgets,
+  .charts,
+  .contentGrid {
+    padding: 18px 24px 0;
+  }
+
+  .widgets {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .mainGrid {
+    display: grid;
+    grid-template-columns: minmax(300px, 0.9fr) minmax(360px, 1.6fr);
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  .contentGrid {
+    display: grid;
+    grid-template-columns: minmax(420px, 1.7fr) minmax(300px, 0.8fr);
+    gap: 18px;
+    padding-bottom: 24px;
+  }
+
+  .sideStack {
+    display: grid;
+    gap: 18px;
+    align-content: start;
+  }
+}
+
+@media (max-width: 1180px) {
+  .home {
+    .widgets {
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+    }
+
+    .mainGrid,
+    .contentGrid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .home {
+    .pageIntro {
+      flex-direction: column;
+    }
+
+    .widgets {
+      grid-template-columns: 1fr;
+    }
 
     .widgets,
-    .charts {
-      display: flex;
-      padding: 20px;
-      gap: 20px;
-    }
-
-    .charts {
-      padding: 5px 20px;
-    }
-
-    .listContainer {
-      -webkit-box-shadow: 2px 4px 10px 1px rgba(0, 0, 0, 0.47);
-      box-shadow: 2px 4px 10px 1px rgba(201, 201, 201, 0.47);
-      padding: 20px;
-      margin: 20px;
-
-      .listTitle {
-        font-weight: 500;
-        color: gray;
-        margin-bottom: 15px;
-      }
+    .charts,
+    .contentGrid,
+    .pageIntro {
+      padding-left: 14px;
+      padding-right: 14px;
     }
   }
 }

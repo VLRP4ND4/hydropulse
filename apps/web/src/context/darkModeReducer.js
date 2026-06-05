@@ -1,3 +1,5 @@
+// Reducer темы принимает простые действия: включить светлую тему,
+// включить темную тему или переключить текущее состояние.
 const DarkModeReducer = (state, action) => {
   switch (action.type) {
     case "LIGHT": {

@@ -4,6 +4,8 @@ import { userColumns, userRows } from "../../datatablesource";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
+// Старый шаблон DataGrid. Сейчас рабочая админка находится в pages/admin/Admin.jsx,
+// поэтому этот компонент оставлен только как пример таблицы Material UI.
 const Datatable = () => {
   const [data, setData] = useState(userRows);
 
@@ -14,19 +16,19 @@ const Datatable = () => {
   const actionColumn = [
     {
       field: "action",
-      headerName: "Action",
+      headerName: "Действие",
       width: 200,
       renderCell: (params) => {
         return (
           <div className="cellAction">
             <Link to="/users/test" style={{ textDecoration: "none" }}>
-              <div className="viewButton">View</div>
+              <div className="viewButton">Просмотр</div>
             </Link>
             <div
               className="deleteButton"
               onClick={() => handleDelete(params.row.id)}
             >
-              Delete
+              Удалить
             </div>
           </div>
         );
@@ -36,9 +38,9 @@ const Datatable = () => {
   return (
     <div className="datatable">
       <div className="datatableTitle">
-        Add New User
+        Добавить пользователя
         <Link to="/users/new" className="link">
-          Add New
+          Добавить
         </Link>
       </div>
       <DataGrid

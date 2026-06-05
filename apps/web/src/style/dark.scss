@@ -1,69 +1,359 @@
 .app.dark {
-  background-color: #111;
-  color: rgb(156, 156, 156);
+  background-color: #020617;
+  color: #dbe7f5;
 
-  .chartGrid {
-    stroke: rgba(228, 228, 228, 0.219);
+  .home,
+  .map,
+  .chart,
+  .forecast,
+  .adminPage,
+  .loginPage {
+    background: #020617;
   }
 
-  .table {
-    background-color: #111;
+  .navbar,
+  .sidebar,
+  .widget,
+  .featured,
+  .GMap,
+  .stationsTable,
+  .alertsList,
+  .measurementForm,
+  .achart,
+  .forecastChart,
+  .adminForm,
+  .adminTableWrap,
+  .adminAuthNotice,
+  .loginPanel,
+  .map .markerForm {
+    background: #0f172a;
+    color: #dbe7f5;
+    border-color: #1e293b;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
 
-    .tableCell {
-      color: gray;
+  .pageIntro h1,
+  .featured .top .title,
+  .featured .bottom .amount,
+  .GMap .mapHeader h3,
+  .stationsTable .tableHeader h3,
+  .alertsList .alertsHeader h3,
+  .measurementForm h3,
+  .achart .chartHeader h3,
+  .forecastChart .forecastHeader h3,
+  .adminIntro h1,
+  .adminForm .adminFormHeader h3,
+  .adminAuthNotice h1,
+  .loginPanel h1,
+  .map .pageIntro h1,
+  .map .markerForm .markerFormHeader h3,
+  .sidebar .center ul li,
+  .widget .counter,
+  .forecastChart .forecastStats b,
+  .adminTable th {
+    color: #f3f7fb;
+  }
+
+  .sidebar .center ul li:hover {
+    background: #1e293b;
+    color: #bfdbfe;
+  }
+
+  .sidebar .center ul .active li {
+    background: #1d4ed8;
+    color: #eff6ff;
+  }
+
+  .sidebar .sidebarToggle,
+  .navbar .authTopButton,
+  .adminTabs button,
+  .adminForm .adminFormHeader button,
+  .loginPanel button.secondary,
+  .map .pageIntro .mapMode.active {
+    background: #1e293b;
+    color: #f3f7fb;
+  }
+
+  .pageIntro p,
+  .widget .title,
+  .widget .link,
+  .featured .emptyState,
+  .featured .bottom .desc,
+  .featured .bottom .summary .itemTitle,
+  .stationsTable .tableHeader span,
+  .stationsTable small,
+  .stationsTable .emptyCell,
+  .measurementForm p,
+  .achart .chartHeader p,
+  .forecastChart .forecastHeader p,
+  .chartState,
+  .forecastChart .forecastState,
+  .alertsList .emptyState,
+  .loginHint {
+    color: #b9c8dc;
+  }
+
+  .featured .bottom .title,
+  .featured .bottom .summary .itemResult,
+  .measurementForm label,
+  .stationsTable td,
+  .alertsList .alertItem p {
+    color: #dbe7f5;
+  }
+
+  .sidebar .sidebarToggle:hover,
+  .navbar .authTopButton:hover {
+    background: #172554;
+    color: #bfdbfe;
+  }
+
+  .adminTabs button {
+    border-color: #334155;
+
+    &.active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #eff6ff;
     }
   }
 
-  .navbar {
-    color: #999;
-    border-color: #333;
-
-    .search {
-      border-color: gray;
-    }
+  .navbar .search,
+  .measurementForm input,
+  .measurementForm select,
+  .achart .chartHeader select,
+  .forecastChart .forecastHeader select,
+  .adminForm input,
+  .adminForm select,
+  .loginPanel input,
+  .map .markerForm input,
+  .map .markerForm select {
+    border-color: #334155;
+    color: #eef4fb;
+    background: transparent;
   }
 
-  .sidebar {
-    background-color: #111;
-    border-color: #333;
+  .navbar .search {
+    background:
+      linear-gradient(#0f172a, #0f172a) padding-box,
+      linear-gradient(105deg, #38bdf8, #22c55e 45%, #f59e0b) border-box;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
 
-    .top {
-      .logo {
-        color: #999;
+    &.active {
+      box-shadow: 0 20px 48px rgba(14, 165, 233, 0.18);
+    }
+
+    input {
+      color: #eef4fb;
+
+      &::placeholder {
+        color: #93a5bd;
       }
     }
-    hr {
-      border-color: #333;
+
+    .searchClear {
+      background: #0c4a6e;
+      color: #bae6fd;
+
+      &:hover {
+        background: #075985;
+      }
     }
 
-    ul {
-      li {
-        &:hover {
-          background-color: #333;
-        }
+    .searchPanel {
+      background: #0f172a;
+      border-color: #334155;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+    }
 
-        .icon {
-          color: #999;
-        }
+    .searchPanelHeader,
+    .searchResult {
+      border-color: #1e293b;
+    }
+
+    .searchPanelHeader b,
+    .searchResultText b,
+    .searchStationMeta em {
+      color: #e2e8f0;
+    }
+
+    .searchResultText small,
+    .searchState {
+      color: #cfdbeb;
+    }
+
+    .searchSignal {
+      background: #1e293b;
+    }
+
+    .searchResult:hover,
+    .searchResult.selected {
+      background: #172554;
+    }
+
+    .searchResultIcon {
+      background: #0c4a6e;
+      color: #bae6fd;
+
+      &.station {
+        background: #064e3b;
+        color: #bbf7d0;
       }
+    }
+
+    .searchResultTag {
+      background: #1e293b;
+      color: #d2ddea;
     }
   }
 
-  .datatable {
-    .datagrid {
-      color: gray;
-      border: none;
+  input,
+  select {
+    background-color: transparent;
+    color: #e2e8f0;
+  }
 
-      .viewButton,
-      .deleteButton,
-      .cellWithStatus {
-        color: gray;
-        border: none;
-      }
+  select option {
+    background: #0f172a;
+    color: #e2e8f0;
+  }
+
+  .stationsTable th,
+  .forecastChart .forecastStats div,
+  .forecastChart .forecastMeta span,
+  .adminTable th {
+    background: #1e293b;
+  }
+
+  .stationsTable th {
+    color: #aec0d6;
+  }
+
+  .stationsTable th,
+  .stationsTable td,
+  .adminTable th,
+  .adminTable td,
+  .alertsList .alertItem,
+  .GMap .mapHeader,
+  .stationsTable .tableHeader,
+  .alertsList .alertsHeader {
+    border-color: #1e293b;
+  }
+
+  .stationsTable tbody tr:hover,
+  .stationsTable tbody tr.selected {
+    background: #172554;
+  }
+
+  .stationsTable tbody tr:hover td,
+  .stationsTable tbody tr.selected td,
+  .stationsTable tbody tr.selected b {
+    color: #eff6ff;
+  }
+
+  .stationsTable tbody tr:hover small,
+  .stationsTable tbody tr.selected small {
+    color: #bfdbfe;
+  }
+
+  .datatable .datagrid,
+  .MuiDataGrid-root {
+    color: #e2e8f0;
+    border-color: #1e293b;
+  }
+
+  .MuiDataGrid-columnHeaders,
+  .MuiDataGrid-footerContainer,
+  .MuiDataGrid-cell {
+    border-color: #1e293b;
+  }
+
+  .MuiDataGrid-columnHeaders,
+  .MuiDataGrid-row.Mui-selected,
+  .MuiDataGrid-row:hover {
+    background-color: #172554 !important;
+  }
+
+  .MuiDataGrid-row.Mui-selected .MuiDataGrid-cell,
+  .MuiDataGrid-row:hover .MuiDataGrid-cell {
+    color: #eff6ff;
+  }
+
+  .adminIntro p,
+  .adminAuthNotice p,
+  .loginPanel p,
+  .loginHint,
+  .map .pageIntro p,
+  .map .markerForm .markerFormHeader p,
+  .adminForm label,
+  .loginPanel label,
+  .map .markerForm label,
+  .forecastChart .forecastStats span,
+  .forecastChart .forecastMeta span,
+  .adminTable td {
+    color: #d2ddea;
+  }
+
+  .measurementForm .formMessage,
+  .navbar .notificationPanel,
+  .navbar .notificationPanelHeader button,
+  .GMap .mapHeaderActions button {
+    background: #1e293b;
+    color: #eef4fb;
+    border-color: #334155;
+  }
+
+  .adminAuthNotice {
+    border-color: #1e293b;
+    background: #111827;
+
+    .authNoticeKicker {
+      background: #172554;
+      color: #dbeafe;
+    }
+
+    a {
+      box-shadow: 0 14px 28px rgba(37, 99, 235, 0.24);
     }
   }
 
-  input{
-      background-color: transparent;
+  .navbar .iconButton:hover,
+  .navbar .iconButton.active {
+    background: #1e293b;
+    color: #bfdbfe;
+  }
+
+  .navbar .notificationPanel,
+  .navbar .notificationPanelHeader,
+  .navbar .notificationItem {
+    border-color: #1e293b;
+  }
+
+  .navbar .notificationPanelHeader b,
+  .navbar .notificationItem b,
+  .GMap .mapInfoWindow h4 {
+    color: #e2e8f0;
+  }
+
+  .navbar .notificationPanelHeader span,
+  .navbar .notificationItem p,
+  .navbar .notificationItem small,
+  .GMap .mapInfoWindow p {
+    color: #d2ddea;
+  }
+
+  .GMap .mapHeaderActions span {
+    background: #0c4a6e;
+    color: #e0f2fe;
+  }
+
+  .GMap .mapEmpty {
+    background: rgba(15, 23, 42, 0.72);
+    color: #d2ddea;
+  }
+
+  .hydroLeafletPopup .leaflet-popup-content-wrapper,
+  .hydroLeafletPopup .leaflet-popup-tip {
+    background: #0f172a;
+    color: #e2e8f0;
   }
 }

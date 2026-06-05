@@ -1,0 +1,72 @@
+.stationsTable {
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+
+  .tableHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px;
+    border-bottom: 1px solid #e2e8f0;
+
+    h3 {
+      margin: 0;
+      color: #0f172a;
+    }
+
+    span {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 700;
+    }
+  }
+
+  .tableScroll {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: 13px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  th {
+    color: #64748b;
+    font-size: 12px;
+    text-transform: uppercase;
+    background: #f8fafc;
+  }
+
+  tr {
+    cursor: pointer;
+  }
+
+  tbody tr:hover,
+  tbody tr.selected {
+    background: #eff6ff;
+  }
+
+  small {
+    display: block;
+    margin-top: 3px;
+    color: #64748b;
+  }
+
+  .emptyCell {
+    text-align: center;
+    color: #64748b;
+    padding: 28px;
+  }
+}

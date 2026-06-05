@@ -1,26 +1,28 @@
 import Sidebar from "../../components/sidebar/Sidebar";
 import Navbar from "../../components/navbar/Navbar";
+import ForecastChart from "../../components/forecast/ForecastChart";
 import SChart from "../../components/chart/Chart";
-import Forecast from "../../components/forecast/ForecastChart";
 import "./forecast.scss";
 
-const Reporter = () => {
-    return (
-        <div className="forecast">
-            <Sidebar />
-            <div className="forecastContainer">
-                <Navbar />
-                <h2>Данные за прошедший день</h2>
-                <div className="charts"  >
-                    <SChart />
-                </div>
-                <h2>Прогнозирование данных</h2>
-                <div className="charts"  >
-                    <Forecast />
-                </div>
-            </div>
+// Раздел прогноза показывает расчетную модель и рядом обычный график последних замеров,
+// чтобы можно было сравнить прогноз с фактической историей.
+const Forecast = () => {
+  return (
+    <div className="forecast">
+      <Sidebar />
+      <div className="forecastContainer">
+        <Navbar />
+        <div className="forecastPageContent">
+          <div className="pageIntro">
+            <h1>Прогнозирование</h1>
+            <p>Минимальный рабочий прогноз: скорость подъёма воды и время до критической отметки.</p>
+          </div>
+          <ForecastChart />
+          <SChart limit={10} />
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
-export default Reporter;
+export default Forecast;

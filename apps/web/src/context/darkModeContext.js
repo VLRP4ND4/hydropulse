@@ -1,6 +1,8 @@
 import { createContext, useReducer } from "react";
 import DarkModeReducer from "./darkModeReducer";
 
+// Глобальный контекст темы. Он хранит только один флаг darkMode,
+// но через него любой компонент может переключить оформление.
 const INITIAL_STATE = {
   darkMode: false,
 };

@@ -1,9 +1,114 @@
-.achart {
-    flex: 4;
-    -webkit-box-shadow: 2px 4px 10px 1px rgba(0, 0, 0, 0.47);
-    box-shadow: 2px 4px 10px 1px rgba(201, 201, 201, 0.47);
-    padding: 10px;
-    color: gray;
-    height: auto;
-    border-radius: 10px;
+.forecastChart {
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 18px;
+
+  .forecastHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+
+    h3 {
+      margin: 0;
+      color: #0f172a;
+    }
+
+    p {
+      margin: 4px 0 0;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    select {
+      min-height: 38px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      padding: 0 10px;
+      max-width: 300px;
+    }
   }
+
+  .forecastStats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 10px;
+
+    div {
+      padding: 12px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      min-width: 0;
+    }
+
+    b {
+      display: block;
+      color: #0f172a;
+      font-size: 18px;
+      line-height: 1.2;
+      margin-bottom: 4px;
+      overflow-wrap: anywhere;
+    }
+
+    span {
+      color: #64748b;
+      font-size: 12px;
+    }
+  }
+
+  .forecastMeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+
+    span {
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #475569;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+  }
+
+  .forecastCanvas {
+    height: 300px;
+  }
+
+  .forecastState {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 260px;
+    color: #64748b;
+
+    &.error {
+      color: #b91c1c;
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .forecastChart {
+    .forecastHeader {
+      flex-direction: column;
+    }
+
+    .forecastStats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .forecastChart .forecastStats {
+    grid-template-columns: 1fr;
+  }
+}

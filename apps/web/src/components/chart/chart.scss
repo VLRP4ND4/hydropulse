@@ -1,9 +1,62 @@
 .achart {
-  flex: 4;
-  -webkit-box-shadow: 2px 4px 10px 1px rgba(0, 0, 0, 0.47);
-  box-shadow: 2px 4px 10px 1px rgba(201, 201, 201, 0.47);
-  padding: 10px;
-  color: gray;
-  height: auto;
-  border-radius: 10px;
+  width: 100%;
+  height: 420px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 18px;
+  box-sizing: border-box;
+
+  .chartHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 14px;
+
+    h3 {
+      margin: 0;
+      color: #0f172a;
+    }
+
+    p {
+      margin: 4px 0 0;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    select {
+      min-height: 38px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      padding: 0 10px;
+      max-width: 300px;
+    }
+  }
+
+  canvas {
+    max-height: 330px;
+  }
+
+  .chartState {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: #64748b;
+
+    &.error {
+      color: #b91c1c;
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .achart {
+    height: 480px;
+
+    .chartHeader {
+      flex-direction: column;
+    }
+  }
 }

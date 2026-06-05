@@ -1,19 +1,134 @@
 .map {
   display: flex;
+  min-height: 100vh;
+  background: #f1f5f9;
 
   .mapContainer {
     flex: 6;
+    min-width: 0;
+  }
 
+  .mapPageContent {
+    display: grid;
+    gap: 18px;
+    padding: 22px 24px 24px;
+  }
 
-    .charts {
-      display: flex;
-      padding: 20px;
-      gap: 20px;
-      border-radius: 5px;
-      height: 700px;
+  .pageIntro {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+
+    h1 {
+      margin: 0;
+      color: #0f172a;
     }
-    .charts {
-      padding: 5px 20px;
+
+    p {
+      margin: 6px 0 0;
+      color: #64748b;
     }
+
+    .mapMode {
+      min-height: 38px;
+      border: 0;
+      border-radius: 10px;
+      background: #2563eb;
+      color: #fff;
+      padding: 0 14px;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+
+      &.active {
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+    }
+  }
+
+  .apiError {
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 14px;
+  }
+
+  .markerForm {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    padding: 16px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+
+    .markerFormHeader {
+      grid-column: 1 / -1;
+
+      h3 {
+        margin: 0;
+        color: #0f172a;
+      }
+
+      p {
+        margin: 4px 0 0;
+        color: #64748b;
+      }
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    input,
+    select {
+      min-height: 38px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 0 10px;
+      font: inherit;
+    }
+
+    button {
+      align-self: end;
+      min-height: 38px;
+      border: 0;
+      border-radius: 10px;
+      background: #0f766e;
+      color: #fff;
+      padding: 0 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+  }
+
+  .markerState {
+    grid-column: 1 / -1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-weight: 800;
+
+    &.success {
+      background: #d1fae5;
+      color: #047857;
+    }
+
+    &.error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .map .pageIntro {
+    flex-direction: column;
   }
 }
