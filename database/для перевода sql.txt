@@ -1,0 +1,1 @@
+"C:\Program Files\PostgreSQL\17\bin\pg_restore.exe" --no-owner --no-acl --file="FOR_WN7_REAL.sql" "hydropulse2.backup"
