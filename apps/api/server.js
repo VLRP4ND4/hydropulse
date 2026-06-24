@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 const {
   create_pool,
   database_config,
@@ -1324,6 +1326,16 @@ app.get("/api/forecast/:sensor_id", async (req, res) => {
 
 // При старте сначала гарантируем таблицу пользователей, затем запускаем HTTP API
 // и Telegram polling. Если БД недоступна, сервер не стартует молча.
+const frontend_dir = path.join(__dirname, "public");
+const frontend_index = path.join(frontend_dir, "index.html");
+
+if (fs.existsSync(frontend_index)) {
+  app.use(express.static(frontend_dir));
+  app.get(/^(?!\/api\/).*/, (req, res) => {
+    res.sendFile(frontend_index);
+  });
+}
+
 const port = Number(process.env.PORT || 3001);
 ensure_auth_schema()
   .then(() => {

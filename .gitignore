@@ -1,4 +1,12 @@
 *.log
 *.err.log
 *.out.log
+node_modules/
+**/node_modules/
+build/
+dist/
+.env
+.env.*
+!.env.example
+hydropulse-amvera-upload*.zip
 
