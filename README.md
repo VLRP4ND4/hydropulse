@@ -55,7 +55,7 @@ flowchart LR
   H --> J["Telegram bot"]
 ```
 
-Если Arduino пока нет, замер можно добавить через React-форму или `POST /api/measurements`. Он пройдет через ту же backend-логику: расчет уровня воды, сохранение, проверка порогов, создание тревоги.
+Если Arduino пока нет, замер можно добавить через React-форму после входа администратором или через `POST /api/admin/measurements` с админским токеном. Он пройдет через ту же backend-логику: расчет уровня воды, сохранение, проверка порогов, создание тревоги.
 
 ## База Данных
 
@@ -102,7 +102,7 @@ DATABASE_NAME=HydroPulse
 DATABASE_USER=postgres
 DATABASE_PASSWORD=postgres
 DEFAULT_ADMIN_USERNAME=admin
-DEFAULT_ADMIN_PASSWORD=admin123
+DEFAULT_ADMIN_PASSWORD=admin2026
 DEFAULT_VIEWER_USERNAME=viewer
 DEFAULT_VIEWER_PASSWORD=viewer123
 SERIAL_PORT=COM8
@@ -199,7 +199,7 @@ GET  /api/water_level_measurements/:sensor_id?limit=30
 GET  /api/sensors
 GET  /api/alerts?limit=20
 GET  /api/forecast/:sensor_id?model_limit=120&history_limit=24&horizon_hours=12
-POST /api/measurements
+POST /api/measurements  # аппаратная ручка для датчика/шлюза
 ```
 
 Авторизация и админка:

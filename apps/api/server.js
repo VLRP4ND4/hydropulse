@@ -270,7 +270,7 @@ async function ensure_auth_schema() {
   `);
 
   const admin_username = process.env.DEFAULT_ADMIN_USERNAME || "admin";
-  const admin_password = process.env.DEFAULT_ADMIN_PASSWORD || "admin123";
+  const admin_password = process.env.DEFAULT_ADMIN_PASSWORD || "admin2026";
   const viewer_username = process.env.DEFAULT_VIEWER_USERNAME || "viewer";
   const viewer_password = process.env.DEFAULT_VIEWER_PASSWORD || "viewer123";
 

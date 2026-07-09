@@ -95,14 +95,6 @@ export function get_forecast(sensor_id, options = {}) {
   return request_json(`/api/forecast/${sensor_id}?${params.toString()}`);
 }
 
-// Ручной тестовый ввод: используется формой, когда Arduino/LoRa еще не подключены.
-export function create_measurement(payload) {
-  return request_json("/api/measurements", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-}
-
 export function create_admin_measurement(payload) {
   return request_json("/api/admin/measurements", {
     method: "POST",

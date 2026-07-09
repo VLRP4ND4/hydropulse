@@ -8,8 +8,8 @@ import "./login.scss";
 const Login = () => {
   const navigate = useNavigate();
   const { user, loginUser, logout } = useAuth();
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("admin123");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -66,14 +66,9 @@ const Login = () => {
 
         {error && <div className="loginError">{error}</div>}
 
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" disabled={isSubmitting || !username.trim() || !password}>
           {isSubmitting ? "Вход..." : "Войти"}
         </button>
-
-        <div className="loginHint">
-          <span>admin / admin123</span>
-          <span>viewer / viewer123</span>
-        </div>
       </form>
     </div>
   );
