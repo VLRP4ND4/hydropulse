@@ -1,5 +1,5 @@
 import "./forecastChart.scss";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import { get_forecast, get_latest_monitoring_stations } from "../../api/hydropulse_api";
@@ -28,27 +28,34 @@ function confidence_label(value) {
   return labels[value] || "низкая";
 }
 
-const ForecastChart = ({ sensorId }) => {
+const ForecastChart = ({ sensorId, onSensorChange }) => {
   const { darkMode } = useContext(DarkModeContext);
   const [stations, set_stations] = useState([]);
   const [current_sensor_id, set_current_sensor_id] = useState(sensorId || "");
   const [forecast, set_forecast] = useState(null);
   const [error, set_error] = useState(null);
 
+  const select_sensor_id = useCallback((value, notify_parent = true) => {
+    set_current_sensor_id(value);
+    set_forecast(null);
+    set_error(null);
+    if (notify_parent && onSensorChange) onSensorChange(value);
+  }, [onSensorChange]);
+
   useEffect(() => {
     // Первым запросом загружаем станции, чтобы выбрать датчик по умолчанию.
     get_latest_monitoring_stations()
       .then((data) => {
         set_stations(data);
-        if (!current_sensor_id && data[0]) set_current_sensor_id(data[0].sensor_id);
+        if (!sensorId && data[0]) select_sensor_id(data[0].sensor_id);
       })
       .catch(() => set_error("Ошибка загрузки станций"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (sensorId) set_current_sensor_id(sensorId);
-  }, [sensorId]);
+    if (sensorId) select_sensor_id(sensorId, false);
+  }, [sensorId, select_sensor_id]);
 
   useEffect(() => {
     if (!current_sensor_id) return undefined;
@@ -167,7 +174,11 @@ const ForecastChart = ({ sensorId }) => {
           <h3>Прогноз паводкового риска</h3>
           <p>Взвешенный тренд, скорость последних замеров и коридор риска на 12 часов.</p>
         </div>
-        <select value={current_sensor_id} onChange={(event) => set_current_sensor_id(event.target.value)}>
+        <select
+          aria-label="Гидропост прогноза"
+          value={current_sensor_id}
+          onChange={(event) => select_sensor_id(event.target.value)}
+        >
           {stations.map((station) => (
             <option key={station.sensor_id} value={station.sensor_id}>
               {station.sensor_id} — {station.monitoring_station_name}

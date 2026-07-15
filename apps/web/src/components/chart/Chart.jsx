@@ -13,7 +13,7 @@ function format_time(value) {
   return value ? new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
 }
 
-const SChart = ({ sensorId, hours = 24, limit = null }) => {
+const SChart = ({ sensorId, onSensorChange, hours = 24, limit = null }) => {
   const params = useParams();
   const { darkMode } = useContext(DarkModeContext);
   const route_sensor_id = sensorId || params.id || "";
@@ -28,7 +28,8 @@ const SChart = ({ sensorId, hours = 24, limit = null }) => {
     set_current_sensor_id(value);
     set_measurements([]);
     set_is_loading(true);
-  }, []);
+    if (onSensorChange) onSensorChange(value);
+  }, [onSensorChange]);
 
   function select_measurement_limit(value) {
     set_measurement_limit(Number(value));
@@ -46,7 +47,7 @@ const SChart = ({ sensorId, hours = 24, limit = null }) => {
         if (!is_active) return;
         set_stations(data);
         if (!route_sensor_id && data[0]) {
-          set_current_sensor_id((current) => current || data[0].sensor_id);
+          select_sensor_id(data[0].sensor_id);
         }
       } catch (err) {
         if (!is_active) return;
