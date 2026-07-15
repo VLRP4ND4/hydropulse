@@ -11,6 +11,11 @@ const {
 } = require("./db");
 const { queue_alert_notification } = require("./notificationService");
 const { start_telegram_bot } = require("./telegramBot");
+const {
+  aggregate_measurements,
+  analyze_measurements,
+  robust_standard_deviation,
+} = require("./measurementQuality");
 
 // Главный backend HydroPulse: HTTP API, авторизация, работа с PostgreSQL,
 // прием измерений, формирование тревог и расчет прогноза уровня воды.
@@ -340,14 +345,6 @@ function median(values) {
   return source.length % 2 ? source[middle] : (source[middle - 1] + source[middle]) / 2;
 }
 
-function standard_deviation(values) {
-  const source = values.filter((value) => Number.isFinite(value));
-  if (source.length < 2) return 0;
-  const avg = average(source);
-  const variance = source.reduce((sum, value) => sum + (value - avg) ** 2, 0) / (source.length - 1);
-  return Math.sqrt(variance);
-}
-
 function clamp_number(value, min, max) {
   if (!Number.isFinite(value)) return 0;
   return Math.max(min, Math.min(max, value));
@@ -406,7 +403,7 @@ function weighted_linear_regression(samples) {
     intercept,
     rate,
     r2: ss_tot > 0 ? clamp_number(1 - ss_res / ss_tot, 0, 1) : 0,
-    residual_std: standard_deviation(residuals),
+    residual_std: robust_standard_deviation(residuals),
   };
 }
 
@@ -472,6 +469,8 @@ function estimate_hours_to_threshold(last_level, threshold, forecast_points, fie
 // Простая оценка доверия к прогнозу: чем больше данных, длиннее история,
 // выше R² и ниже разброс/волатильность, тем выше confidence.
 function forecast_confidence(sample_count, time_span_hours, r2, residual_std, velocity_volatility) {
+  if (sample_count < 6 || residual_std > 50 || velocity_volatility > 100) return "low";
+
   let score = 0;
 
   if (sample_count >= 20) score += 2;
@@ -502,24 +501,33 @@ function build_forecast_response(sensor_id, station, rows, options = {}) {
   const history_limit = options.history_limit || 24;
   const horizon_hours = options.horizon_hours || 12;
   const forecast_step_hours = options.forecast_step_hours || 1;
-  const samples = build_forecast_samples(rows);
+  const model_limit = options.model_limit || 120;
+  const bucket_minutes = options.bucket_minutes || 15;
+  const quality = analyze_measurements(rows);
+  const clean_rows = quality.accepted.slice(-model_limit);
+  const model_rows = aggregate_measurements(clean_rows, bucket_minutes);
+  const samples = build_forecast_samples(model_rows);
   const regression = weighted_linear_regression(samples);
   const velocities = build_velocity_profile(samples);
   const recent_rate = median(velocities.slice(-4));
   const rate = recent_rate === null ? regression.rate : regression.rate * 0.65 + recent_rate * 0.35;
   const recent_velocity = average(velocities.slice(-4));
-  const previous_velocity = average(velocities.slice(0, Math.max(velocities.length - 4, 0)));
+  const previous_velocity = median(velocities.slice(0, Math.max(velocities.length - 4, 0)));
   const time_span_hours = samples.length >= 2 ? samples[samples.length - 1].x - samples[0].x : 0;
   const acceleration =
     recent_velocity === null || previous_velocity === null
       ? 0
       : clamp_number((recent_velocity - previous_velocity) / Math.max(time_span_hours / 2, 1), -3, 3);
-  const velocity_volatility = standard_deviation(velocities);
+  const velocity_volatility = robust_standard_deviation(velocities);
   const last_sample = samples[samples.length - 1];
   const last_level = last_sample ? last_sample.y : null;
-  const danger = station.danger_level_cm === null ? null : Number(station.danger_level_cm);
-  const critical = station.critical_level_cm === null ? null : Number(station.critical_level_cm);
-  const visible_rows = rows.slice(-history_limit);
+  const danger = to_number(station.danger_level_cm);
+  const critical = to_number(station.critical_level_cm);
+  const sensor_height = to_number(station.sensor_height_cm);
+  const visible_rows = clean_rows.slice(-history_limit);
+  const threshold_span = danger === null || critical === null ? 0 : Math.abs(critical - danger);
+  const corridor_uncertainty_limit_cm = options.corridor_uncertainty_limit_cm || Math.max(120, threshold_span * 4);
+  const physical_upper_limit_cm = sensor_height === null ? null : sensor_height + 25;
 
   const points = visible_rows.map((item) => ({
     label: new Date(item.measured_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
@@ -529,6 +537,8 @@ function build_forecast_response(sensor_id, station, rows, options = {}) {
     forecast_upper_cm: null,
     forecast_horizon_hours: null,
   }));
+
+  const forecast_candidates = [];
 
   for (let hour = forecast_step_hours; hour <= horizon_hours + 0.0001; hour += forecast_step_hours) {
     const normalized_hour = Number(hour.toFixed(2));
@@ -544,27 +554,54 @@ function build_forecast_response(sensor_id, station, rows, options = {}) {
       velocity_volatility * Math.sqrt(normalized_hour) * 0.6 +
       Math.abs(acceleration) * normalized_hour * 0.4;
 
-    points.push({
+    forecast_candidates.push({
       label: forecast_label(normalized_hour),
       water_level_cm: null,
       forecast_level_cm: forecast_level === null ? null : Number(forecast_level.toFixed(2)),
       forecast_lower_cm: forecast_level === null ? null : Number(Math.max(0, forecast_level - uncertainty).toFixed(2)),
       forecast_upper_cm: forecast_level === null ? null : Number((forecast_level + uncertainty).toFixed(2)),
       forecast_horizon_hours: normalized_hour,
+      forecast_uncertainty_cm: Number(uncertainty.toFixed(2)),
     });
   }
+
+  const maximum_uncertainty_cm = Math.max(
+    0,
+    ...forecast_candidates.map((point) => point.forecast_uncertainty_cm || 0)
+  );
+  const maximum_upper_cm = Math.max(
+    0,
+    ...forecast_candidates.map((point) => point.forecast_upper_cm || 0)
+  );
+  const corridor_available =
+    samples.length >= 6 &&
+    velocity_volatility <= 100 &&
+    maximum_uncertainty_cm <= corridor_uncertainty_limit_cm &&
+    (physical_upper_limit_cm === null || maximum_upper_cm <= physical_upper_limit_cm);
+
+  points.push(
+    ...forecast_candidates.map((point) => ({
+      ...point,
+      forecast_lower_cm: corridor_available ? point.forecast_lower_cm : null,
+      forecast_upper_cm: corridor_available ? point.forecast_upper_cm : null,
+    }))
+  );
 
   const future_points = points.filter((point) => point.forecast_horizon_hours !== null);
   const hours_to_critical = estimate_hours_to_threshold(last_level, critical, future_points, "forecast_level_cm");
   const hours_to_danger = estimate_hours_to_threshold(last_level, danger, future_points, "forecast_level_cm");
-  const risk_hours_to_critical = estimate_hours_to_threshold(last_level, critical, future_points, "forecast_upper_cm");
-  const confidence = forecast_confidence(
-    samples.length,
-    time_span_hours,
-    regression.r2,
-    regression.residual_std,
-    velocity_volatility
-  );
+  const risk_hours_to_critical = corridor_available
+    ? estimate_hours_to_threshold(last_level, critical, future_points, "forecast_upper_cm")
+    : null;
+  const confidence = corridor_available
+    ? forecast_confidence(
+        samples.length,
+        time_span_hours,
+        regression.r2,
+        regression.residual_std,
+        velocity_volatility
+      )
+    : "low";
 
   let warning = "Недостаточно данных";
   if (last_level !== null) {
@@ -572,6 +609,7 @@ function build_forecast_response(sensor_id, station, rows, options = {}) {
     else if (hours_to_critical !== null && hours_to_critical <= 6) warning = "Критический уровень вероятен в ближайшие 6 часов";
     else if (risk_hours_to_critical !== null && risk_hours_to_critical <= 6) warning = "Есть риск достижения критического уровня по верхнему коридору";
     else if (hours_to_danger !== null && hours_to_danger <= 6) warning = "Опасный уровень вероятен в ближайшие 6 часов";
+    else if (!corridor_available) warning = "Коридор риска скрыт: данные недостаточно стабильны";
     else if (rate > 0.05) warning = "Уровень растет";
     else if (rate < -0.05) warning = "Уровень снижается";
     else warning = "Рост не зафиксирован";
@@ -589,15 +627,22 @@ function build_forecast_response(sensor_id, station, rows, options = {}) {
     hours_to_danger: hours_to_danger === null ? null : Number(hours_to_danger.toFixed(2)),
     hours_to_critical: hours_to_critical === null ? null : Number(hours_to_critical.toFixed(2)),
     risk_hours_to_critical: risk_hours_to_critical === null ? null : Number(risk_hours_to_critical.toFixed(2)),
-    sample_count: samples.length,
+    raw_sample_count: rows.length,
+    sample_count: clean_rows.length,
+    model_sample_count: samples.length,
+    excluded_sample_count: quality.rejected.length,
     displayed_sample_count: visible_rows.length,
     forecast_point_count: future_points.length,
     forecast_horizon_hours: horizon_hours,
     forecast_step_hours,
     time_span_hours: Number(time_span_hours.toFixed(2)),
     confidence,
-    model: "weighted_regression_with_recent_velocity",
-    model_label: "взвешенный тренд + скорость последних замеров",
+    corridor_available,
+    corridor_status: corridor_available ? "available" : "hidden_unstable_data",
+    maximum_uncertainty_cm: Number(maximum_uncertainty_cm.toFixed(2)),
+    corridor_uncertainty_limit_cm: Number(corridor_uncertainty_limit_cm.toFixed(2)),
+    model: "quality_filtered_bucketed_weighted_regression",
+    model_label: "очищенный медианный ряд + взвешенный тренд",
     warning,
     points,
   };
@@ -739,16 +784,41 @@ async function insert_measurement(payload) {
       ]
     );
 
-    // После вставки сразу обновляем тревоги и ставим уведомление в очередь.
+    // Сырая запись всегда остается в БД. Для тревог используем тот же фильтр,
+    // что и для графиков, чтобы одиночный скачок не создавал и не закрывал тревогу.
     const measurement = result.rows[0];
-    const status = get_status(water_level_cm, station.danger_level_cm, station.critical_level_cm);
-    const alert = await create_alert_if_needed(client, station, measurement, status);
+    const quality_history_result = await client.query(
+      `SELECT *
+       FROM (
+         SELECT id, water_level_cm, measured_at
+         FROM water_level_measurements
+         WHERE sensor_id = $1
+           AND water_level_cm IS NOT NULL
+         ORDER BY measured_at DESC
+         LIMIT 30
+       ) recent_measurements
+       ORDER BY measured_at ASC`,
+      [sensor_id]
+    );
+    const quality = analyze_measurements(quality_history_result.rows);
+    const is_reliable = quality.accepted.some((item) => String(item.id) === String(measurement.id));
+    const status = is_reliable
+      ? get_status(water_level_cm, station.danger_level_cm, station.critical_level_cm)
+      : "quality_filtered";
+    const alert = is_reliable
+      ? await create_alert_if_needed(client, station, measurement, status)
+      : null;
 
     await client.query("COMMIT");
     if (alert) {
       queue_alert_notification({ alert, station, measurement });
     }
-    return { ...measurement, water_level_status: status, alert };
+    return {
+      ...measurement,
+      water_level_status: status,
+      measurement_quality: is_reliable ? "accepted" : "filtered",
+      alert,
+    };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -1004,7 +1074,7 @@ app.post("/api/admin/monitoring_stations_with_sensor", authenticate, require_adm
 app.get("/api/monitoring_stations/latest", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT DISTINCT ON (ms.id)
+      SELECT
           ms.id AS monitoring_station_id,
           ms.name AS monitoring_station_name,
           ms.station_code,
@@ -1025,36 +1095,67 @@ app.get("/api/monitoring_stations/latest", async (req, res) => {
 
           sn.sensor_id,
           sn.name AS sensor_name,
-
-          wlm.distance_cm,
-          wlm.water_level_cm,
-          wlm.measured_at,
-          wlm.received_at,
-
           ms.danger_level_cm,
           ms.critical_level_cm,
 
-          CASE
-              WHEN wlm.water_level_cm IS NULL THEN 'no_data'
-              WHEN ms.critical_level_cm IS NOT NULL
-                   AND wlm.water_level_cm >= ms.critical_level_cm
-                  THEN 'critical'
-              WHEN ms.danger_level_cm IS NOT NULL
-                   AND wlm.water_level_cm >= ms.danger_level_cm
-                  THEN 'danger'
-              ELSE 'normal'
-          END AS water_level_status
+          recent_measurements.measurements AS measurement_candidates
 
       FROM monitoring_stations ms
       JOIN water_bodies wb ON wb.id = ms.water_body_id
       LEFT JOIN settlements st ON st.id = ms.settlement_id
       LEFT JOIN sensors sn ON sn.monitoring_station_id = ms.id AND sn.is_active = true
-      LEFT JOIN water_level_measurements wlm ON wlm.sensor_id = sn.sensor_id
+      LEFT JOIN LATERAL (
+        SELECT json_agg(candidate ORDER BY candidate.measured_at ASC) AS measurements
+        FROM (
+          SELECT
+            wlm.id,
+            wlm.distance_cm,
+            wlm.water_level_cm,
+            wlm.measured_at,
+            wlm.received_at
+          FROM water_level_measurements wlm
+          WHERE wlm.sensor_id = sn.sensor_id
+            AND wlm.water_level_cm IS NOT NULL
+          ORDER BY wlm.measured_at DESC
+          LIMIT 15
+        ) candidate
+      ) recent_measurements ON true
       WHERE ms.is_active = true
-      ORDER BY ms.id, wlm.measured_at DESC NULLS LAST;
+      ORDER BY ms.id, sn.sensor_id;
     `);
 
-    res.json(result.rows);
+    const stations = new Map();
+
+    for (const row of result.rows) {
+      const candidates = Array.isArray(row.measurement_candidates) ? row.measurement_candidates : [];
+      const quality = analyze_measurements(candidates);
+      const measurement = quality.accepted.at(-1) || null;
+      const { measurement_candidates, ...station_fields } = row;
+      const station = {
+        ...station_fields,
+        distance_cm: measurement ? measurement.distance_cm : null,
+        water_level_cm: measurement ? measurement.water_level_cm : null,
+        measured_at: measurement ? measurement.measured_at : null,
+        received_at: measurement ? measurement.received_at : null,
+        water_level_status: measurement
+          ? get_status(
+              Number(measurement.water_level_cm),
+              to_number(row.danger_level_cm),
+              to_number(row.critical_level_cm)
+            )
+          : "no_data",
+        filtered_measurement_count: quality.rejected.length,
+      };
+      const previous = stations.get(row.monitoring_station_id);
+      const station_time = measurement ? new Date(measurement.measured_at).getTime() : 0;
+      const previous_time = previous && previous.measured_at ? new Date(previous.measured_at).getTime() : 0;
+
+      if (!previous || station_time > previous_time) {
+        stations.set(row.monitoring_station_id, station);
+      }
+    }
+
+    res.json([...stations.values()]);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "database_error" });
@@ -1112,6 +1213,7 @@ app.get("/api/water_level_measurements/:sensor_id", async (req, res) => {
        JOIN monitoring_stations ms ON ms.id = sn.monitoring_station_id
        WHERE wlm.sensor_id = $1`;
 
+    const raw_limit = limit ? Math.min(Math.max(limit * 3, limit + 10), 1500) : null;
     const result = limit
       ? await pool.query(
           `SELECT *
@@ -1121,7 +1223,7 @@ app.get("/api/water_level_measurements/:sensor_id", async (req, res) => {
              LIMIT $2
            ) latest_measurements
            ORDER BY measured_at ASC;`,
-          [sensor_id, limit]
+           [sensor_id, raw_limit]
         )
       : await pool.query(
           `${base_select}
@@ -1130,7 +1232,10 @@ app.get("/api/water_level_measurements/:sensor_id", async (req, res) => {
           [sensor_id, hours]
         );
 
-    res.json(result.rows);
+    const quality = analyze_measurements(result.rows);
+    const visible_rows = limit ? quality.accepted.slice(-limit) : quality.accepted;
+    res.set("X-HydroPulse-Filtered-Measurements", String(quality.rejected.length));
+    res.json(visible_rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "database_error" });
@@ -1283,7 +1388,8 @@ app.get("/api/forecast/:sensor_id", async (req, res) => {
          sn.sensor_id,
          ms.name AS monitoring_station_name,
          ms.critical_level_cm,
-         ms.danger_level_cm
+         ms.danger_level_cm,
+         ms.sensor_height_cm
        FROM sensors sn
        JOIN monitoring_stations ms ON ms.id = sn.monitoring_station_id
        WHERE sn.sensor_id = $1
@@ -1297,10 +1403,11 @@ app.get("/api/forecast/:sensor_id", async (req, res) => {
 
     const station = station_result.rows[0];
 
+    const raw_model_limit = Math.min(model_limit * 3, 900);
     const data_result = await pool.query(
       `SELECT *
        FROM (
-         SELECT water_level_cm, measured_at
+         SELECT id, water_level_cm, measured_at
          FROM water_level_measurements
          WHERE sensor_id = $1
            AND water_level_cm IS NOT NULL
@@ -1308,11 +1415,12 @@ app.get("/api/forecast/:sensor_id", async (req, res) => {
          LIMIT $2
        ) latest_measurements
        ORDER BY measured_at ASC`,
-      [sensor_id, model_limit]
+      [sensor_id, raw_model_limit]
     );
 
     res.json(
       build_forecast_response(sensor_id, station, data_result.rows, {
+        model_limit,
         history_limit,
         horizon_hours,
         forecast_step_hours,

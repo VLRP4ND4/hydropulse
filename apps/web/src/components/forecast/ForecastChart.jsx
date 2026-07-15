@@ -80,6 +80,31 @@ const ForecastChart = ({ sensorId }) => {
     };
   }, [current_sensor_id]);
 
+  const corridor_datasets = forecast && forecast.corridor_available !== false
+    ? [
+        {
+          label: "Верхний коридор риска, см",
+          data: forecast.points ? forecast.points.map((item) => item.forecast_upper_cm) : [],
+          borderColor: "#f97316",
+          borderWidth: 1,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          tension: 0.2,
+          spanGaps: true,
+        },
+        {
+          label: "Нижний коридор риска, см",
+          data: forecast.points ? forecast.points.map((item) => item.forecast_lower_cm) : [],
+          borderColor: "#94a3b8",
+          borderWidth: 1,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          tension: 0.2,
+          spanGaps: true,
+        },
+      ]
+    : [];
+
   const chart_data = {
     // Chart.js получает один массив labels и несколько datasets; null-значения
     // позволяют разнести фактические и прогнозные участки на одном графике.
@@ -104,26 +129,7 @@ const ForecastChart = ({ sensorId }) => {
         tension: 0.25,
         spanGaps: true,
       },
-      {
-        label: "Верхний коридор риска, см",
-        data: forecast && forecast.points ? forecast.points.map((item) => item.forecast_upper_cm) : [],
-        borderColor: "#f97316",
-        borderWidth: 1,
-        borderDash: [4, 4],
-        pointRadius: 0,
-        tension: 0.2,
-        spanGaps: true,
-      },
-      {
-        label: "Нижний коридор риска, см",
-        data: forecast && forecast.points ? forecast.points.map((item) => item.forecast_lower_cm) : [],
-        borderColor: "#94a3b8",
-        borderWidth: 1,
-        borderDash: [4, 4],
-        pointRadius: 0,
-        tension: 0.2,
-        spanGaps: true,
-      },
+      ...corridor_datasets,
       {
         label: "Критический уровень, см",
         data: forecast && forecast.points ? forecast.points.map(() => forecast.critical_level_cm) : [],
@@ -147,7 +153,7 @@ const ForecastChart = ({ sensorId }) => {
       },
       scales: {
         y: {
-          beginAtZero: true,
+          beginAtZero: false,
         },
       },
     },
@@ -193,12 +199,18 @@ const ForecastChart = ({ sensorId }) => {
             </div>
           </div>
           <div className="forecastMeta">
-            <span>Расчет: {forecast.sample_count || 0} замеров</span>
+            <span>Расчет: {forecast.sample_count || 0} достоверных замеров</span>
             <span>На графике: {forecast.displayed_sample_count || 0} фактических точек</span>
+            {forecast.excluded_sample_count > 0 && (
+              <span>Скрыто погрешных: {forecast.excluded_sample_count}</span>
+            )}
             <span>Горизонт: {format_hours(forecast.forecast_horizon_hours)}</span>
             <span>Шаг: {format_hours(forecast.forecast_step_hours)}</span>
             <span>Разброс: {format_number(forecast.residual_std_cm)} см</span>
             <span>Ускорение: {format_number(forecast.acceleration_cm_per_hour2, 2)} см/ч²</span>
+            {forecast.corridor_available === false && (
+              <span>Коридор скрыт: нестабильные данные</span>
+            )}
           </div>
           <div className="forecastCanvas">
             <Line data={chart_data} options={chart_options} />
