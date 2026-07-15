@@ -1,4 +1,6 @@
 // Сервис фоновых уведомлений. Сейчас проект отправляет тревоги только в Telegram.
+const { append_data_disclaimer } = require("./dataDisclaimer");
+
 function parse_boolean(value, fallback = false) {
   if (value === undefined || value === null || value === "") return fallback;
   return ["1", "true", "yes", "on"].includes(String(value).trim().toLowerCase());
@@ -39,7 +41,7 @@ function build_alert_text({ alert, station, measurement }) {
     ? measurement.water_level_cm
     : alert.water_level_cm;
 
-  return [
+  return append_data_disclaimer([
     `HydroPulse: ${status_label(alert.alert_type)}`,
     `Пост: ${station_name}`,
     `Уровень воды: ${format_cm(level)}`,
@@ -50,7 +52,7 @@ function build_alert_text({ alert, station, measurement }) {
     water_body,
   ]
     .filter(Boolean)
-    .join("\n");
+    .join("\n"));
 }
 
 // Низкоуровневая отправка одного Telegram-сообщения через Bot API.

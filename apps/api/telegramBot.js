@@ -1,5 +1,7 @@
 // Telegram-бот работает через long polling: backend сам опрашивает Telegram
 // методом getUpdates и отвечает на команды операторов.
+const { append_data_disclaimer } = require("./dataDisclaimer");
+
 function parse_boolean(value, fallback = true) {
   if (value === undefined || value === null || value === "") return fallback;
   return ["1", "true", "yes", "on"].includes(String(value).trim().toLowerCase());
@@ -310,7 +312,7 @@ async function build_post_message(pool, query) {
 
 // Справка намеренно короткая: команды должны помещаться в одно сообщение.
 function help_message() {
-  return [
+  return append_data_disclaimer([
     "HydroPulse bot",
     "",
     "/status — состояние системы",
@@ -319,7 +321,7 @@ function help_message() {
     "/post 001 — гидропост по sensor_id, коду или названию",
     "/id — показать chat_id для настройки канала",
     "/help — список команд",
-  ].join("\n");
+  ].join("\n"));
 }
 
 // Центральный обработчик одного update: проверяет доступ, выбирает команду
@@ -351,16 +353,16 @@ async function handle_update(pool, token, update) {
       ].filter(Boolean).join("\n");
       break;
     case "/status":
-      response = await build_status_message(pool);
+      response = append_data_disclaimer(await build_status_message(pool));
       break;
     case "/alerts":
-      response = await build_alerts_message(pool);
+      response = append_data_disclaimer(await build_alerts_message(pool));
       break;
     case "/stations":
-      response = await build_stations_message(pool);
+      response = append_data_disclaimer(await build_stations_message(pool));
       break;
     case "/post":
-      response = await build_post_message(pool, args.join(" "));
+      response = append_data_disclaimer(await build_post_message(pool, args.join(" ")));
       break;
     default:
       if (!command.startsWith("/")) return;

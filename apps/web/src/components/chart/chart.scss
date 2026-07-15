@@ -25,6 +25,25 @@
       font-size: 13px;
     }
 
+    .chartControls {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .limitControl {
+      display: grid;
+      gap: 4px;
+
+      span {
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 800;
+      }
+    }
+
     select {
       min-height: 38px;
       border-radius: 10px;
@@ -51,12 +70,21 @@
   }
 }
 
+.app.dark .achart .chartHeader .limitControl span {
+  color: #b9c8dc;
+}
+
 @media (max-width: 720px) {
   .achart {
     height: 480px;
 
     .chartHeader {
       flex-direction: column;
+    }
+
+    .chartHeader .chartControls {
+      width: 100%;
+      justify-content: flex-start;
     }
   }
 }

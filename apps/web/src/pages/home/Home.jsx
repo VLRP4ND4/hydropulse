@@ -8,6 +8,7 @@ import GMap from "../../components/map/GMap";
 import StationsTable from "../../components/stations/StationsTable";
 import AlertsList from "../../components/alerts/AlertsList";
 import MeasurementForm from "../../components/measurementForm/MeasurementForm";
+import DataDisclaimer from "../../components/disclaimer/DataDisclaimer";
 import usePolling from "../../hooks/usePolling";
 import { get_alerts, get_forecast, get_latest_monitoring_stations } from "../../api/hydropulse_api";
 
@@ -41,11 +42,12 @@ const Home = () => {
       <Sidebar />
       <div className="homeContainer">
         <Navbar />
+        <DataDisclaimer />
 
         <div className="pageIntro">
           <div>
             <h1>HydroPulse</h1>
-            <p>Веб-система мониторинга уровня воды. Все данные являются предварительными, а официальная информация только от УГМС.</p>
+            <p>Веб-система мониторинга уровня воды.</p>
           </div>
         </div>
 

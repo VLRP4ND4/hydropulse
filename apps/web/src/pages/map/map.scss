@@ -12,6 +12,11 @@
     display: grid;
     gap: 18px;
     padding: 22px 24px 24px;
+
+    .GMap .googleMapCanvas {
+      height: 650px;
+      min-height: 650px;
+    }
   }
 
   .pageIntro {
@@ -128,7 +133,14 @@
 }
 
 @media (max-width: 720px) {
-  .map .pageIntro {
-    flex-direction: column;
+  .map {
+    .pageIntro {
+      flex-direction: column;
+    }
+
+    .mapPageContent .GMap .googleMapCanvas {
+      height: 430px;
+      min-height: 430px;
+    }
   }
 }

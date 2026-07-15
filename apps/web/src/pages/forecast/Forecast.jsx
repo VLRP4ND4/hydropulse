@@ -1,5 +1,6 @@
 import Sidebar from "../../components/sidebar/Sidebar";
 import Navbar from "../../components/navbar/Navbar";
+import DataDisclaimer from "../../components/disclaimer/DataDisclaimer";
 import ForecastChart from "../../components/forecast/ForecastChart";
 import SChart from "../../components/chart/Chart";
 import "./forecast.scss";
@@ -12,6 +13,7 @@ const Forecast = () => {
       <Sidebar />
       <div className="forecastContainer">
         <Navbar />
+        <DataDisclaimer />
         <div className="forecastPageContent">
           <div className="pageIntro">
             <h1>Прогнозирование</h1>

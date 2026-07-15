@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "../../components/sidebar/Sidebar";
 import Navbar from "../../components/navbar/Navbar";
+import DataDisclaimer from "../../components/disclaimer/DataDisclaimer";
 import "./map.scss";
 import GMap from "../../components/map/GMap";
 import StationsTable from "../../components/stations/StationsTable";
@@ -127,6 +128,7 @@ const Map = () => {
       <Sidebar />
       <div className="mapContainer">
         <Navbar />
+        <DataDisclaimer />
         <div className="mapPageContent">
           <div className="pageIntro small">
             <h1>Карта гидропостов</h1>

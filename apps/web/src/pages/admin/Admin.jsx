@@ -5,6 +5,7 @@ import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import Sidebar from "../../components/sidebar/Sidebar";
 import Navbar from "../../components/navbar/Navbar";
 import MeasurementForm from "../../components/measurementForm/MeasurementForm";
+import DataDisclaimer from "../../components/disclaimer/DataDisclaimer";
 import { useAuth } from "../../context/authContext";
 import {
   create_db_row,
@@ -245,6 +246,7 @@ const Admin = () => {
       <Sidebar />
       <div className="adminContainer">
         <Navbar />
+        <DataDisclaimer />
         <div className="adminContent">
           <div className="adminIntro">
             <div>
